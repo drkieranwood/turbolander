@@ -8,6 +8,7 @@ import pygame
 from drone import Drone
 from pygame.math import Vector2
 import helpers
+from wall import Wall
 
 
 class TurboLander2DEnv(gym.Env):
@@ -33,6 +34,8 @@ class TurboLander2DEnv(gym.Env):
 
         # set up the drone object with default values
         self.drone = Drone(Vector2(400, 400), Vector2(0, 0), 0, 0, Vector2(0, 0), 1, 1)
+
+        self.walls = [Wall([0, 750, 800, 750])]
 
         if self.render_sim is True:
             self.init_pygame()
@@ -86,6 +89,8 @@ class TurboLander2DEnv(gym.Env):
         # if self.first_step is True:
 
         self.drone.step(action, 1.0 / 60)
+        if self.drone.check_collision(self.walls):
+            self.reset()
         self.current_time_step += 1
 
         # Saving drone's position for drawing
@@ -160,8 +165,15 @@ class TurboLander2DEnv(gym.Env):
         if self.render_sim is False:
             return
         self.screen.fill((243, 243, 243))
-        # pygame.draw.rect(self.screen, (24, 114, 139), pygame.Rect(50, 50, 70, 70), 8)
 
+        for wall in self.walls:
+            pygame.draw.line(
+                self.screen,
+                (34, 139, 34),
+                (wall.coordinates[0], wall.coordinates[1]),
+                (wall.coordinates[2], wall.coordinates[3]),
+                8,
+            )
         # self.screen.blit(
         #     self.drone.sprite, (self.drone.position[0], self.drone.position[1])
         # )

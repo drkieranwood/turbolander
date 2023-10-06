@@ -1,6 +1,6 @@
 # from pygame.math import Vector2
 import pygame.math as math
-import pygame
+import helpers
 import numpy as np
 
 
@@ -64,12 +64,34 @@ class Drone:
         if self.attitude > 2 * np.pi:
             np.fmod(self.attitude, 2 * np.pi)
 
-        print(self.attitude)
+        self.update_box()
+
+    def check_collision(self, walls):
+        for wall in walls:
+            if helpers.box_line_collided(self.box, wall.coordinates):
+                return True
+        return False
 
     def update_box(self):
         self.box = [
-            [self.position[0] - self.width / 2, 0],
-            [self.width, 0],
-            [self.width, self.height],
-            [0, self.height],
+            helpers.rotate_point(
+                self.position,
+                self.position + math.Vector2(-self.width / 2, -self.height / 2),
+                self.attitude,
+            ),
+            helpers.rotate_point(
+                self.position,
+                self.position + math.Vector2(self.width / 2, -self.height / 2),
+                self.attitude,
+            ),
+            helpers.rotate_point(
+                self.position,
+                self.position + math.Vector2(-self.width / 2, self.height / 2),
+                self.attitude,
+            ),
+            helpers.rotate_point(
+                self.position,
+                self.position + math.Vector2(self.width / 2, self.height / 2),
+                self.attitude,
+            ),
         ]

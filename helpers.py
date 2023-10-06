@@ -36,14 +36,36 @@ def box_line_collided(box, line):
 
 
 def lines_collided(x1, y1, x2, y2, x3, y3, x4, y4):
-    uA = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / (
-        (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
-    )
-    uB = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / (
-        (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
-    )
+    denominator = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
+
+    if denominator == 0:
+        return lines_collinear(x1, y1, x2, y2, x3, y3, x4, y4)
+
+    uA = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denominator
+    uB = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denominator
+
     if 0 <= uA <= 1 and 0 <= uB <= 1:
         return True
+
+    return False
+
+
+def lines_collinear(x1, y1, x2, y2, x3, y3, x4, y4):
+    # Check if the lines have the same slope (parallel)
+    slope1 = (
+        (y2 - y1) / (x2 - x1) if x2 - x1 != 0 else float("inf")
+    )  # Handle vertical line
+    slope2 = (
+        (y4 - y3) / (x4 - x3) if x4 - x3 != 0 else float("inf")
+    )  # Handle vertical line
+
+    if slope1 == slope2:
+        # Check if they share a common point, which indicates collinearity
+        if (x1, y1) == (x3, y3) or (x1, y1) == (x4, y4):
+            return True
+        if (x2, y2) == (x3, y3) or (x2, y2) == (x4, y4):
+            return True
+
     return False
 
 
@@ -60,6 +82,21 @@ def get_collision_point(x1, y1, x2, y2, x3, y3, x4, y4):
         intersectionY = y1 + (uA * (y2 - y1))
         return vec2(intersectionX, intersectionY)
     return None
+
+
+def rotate_point(origin, point, angle):
+    """
+    Rotate a point counterclockwise by a given angle around a given origin.
+    The angle should be given in radians.
+
+    modified from answer here: https://stackoverflow.com/questions/34372480/rotate-point-about-another-point-in-degrees-python
+    """
+    ox, oy = origin
+    px, py = point
+
+    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+    return [qx, qy]
 
 
 def dist(x1, y1, x2, y2):
