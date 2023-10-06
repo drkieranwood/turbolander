@@ -7,7 +7,7 @@ import os
 import pygame
 from drone import Drone
 from pygame.math import Vector2
-from helpers import blit_rotate
+import helpers
 
 
 class TurboLander2DEnv(gym.Env):
@@ -166,12 +166,14 @@ class TurboLander2DEnv(gym.Env):
         #     self.drone.sprite, (self.drone.position[0], self.drone.position[1])
         # )
 
-        blit_rotate(
+        helpers.blit_rotate(
             self.screen,
             self.drone.sprite,
             self.drone.position,
             (self.drone.width / 2, self.drone.height / 2),
-            -(self.drone.attitude - (3 * np.pi / 2)) * 180 / np.pi,
+            helpers.radians_to_degrees(
+                -(self.drone.attitude - (3 * np.pi / 2))
+            ),  # 3pi / 2 to convert from physics to pygame coordinates
         )
 
         # # Drawing vectors of motor forces

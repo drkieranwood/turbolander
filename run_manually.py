@@ -23,6 +23,9 @@ while running:
         # running bool to false
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r:
+                environment.reset()
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
