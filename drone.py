@@ -25,8 +25,17 @@ class Drone:
 
         self.thrust_multiplier = 20
         self.arm_length = 0.5
-        self.sprite = pygame.image.load("images/drone_2.png").convert_alpha()
+        self.box = [
+            [0, 0],
+            [0, 0],
+            [0, 0],
+            [0, 0],
+        ]
+
+    def load_sprite(self, sprite):
+        self.sprite = sprite
         self.width, self.height = self.sprite.get_size()
+        self.update_box()
 
     def step(self, action, dt):
         u_1 = action[0] / 2 + 0.5
@@ -36,8 +45,8 @@ class Drone:
         thrust_2 = u_2 * self.thrust_multiplier
 
         thrust_vector: math.Vector2 = math.Vector2(
-            np.cos(self.attitude),
             np.sin(self.attitude),
+            -np.cos(self.attitude),
         ).elementwise() * (thrust_1 + thrust_2)
 
         gravitational_acceleration = math.Vector2(0, 9.81)
@@ -54,3 +63,13 @@ class Drone:
         self.attitude = self.attitude + self.angular_velocity * dt
         if self.attitude > 2 * np.pi:
             np.fmod(self.attitude, 2 * np.pi)
+
+        print(self.attitude)
+
+    def update_box(self):
+        self.box = [
+            [self.position[0] - self.width / 2, 0],
+            [self.width, 0],
+            [self.width, self.height],
+            [0, self.height],
+        ]

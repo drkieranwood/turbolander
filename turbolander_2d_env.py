@@ -31,6 +31,9 @@ class TurboLander2DEnv(gym.Env):
         self.render_sim = render_sim
         self.render_path = render_path
 
+        # set up the drone object with default values
+        self.drone = Drone(Vector2(400, 400), Vector2(0, 0), 0, 0, Vector2(0, 0), 1, 1)
+
         if self.render_sim is True:
             self.init_pygame()
             self.flight_path = []
@@ -63,15 +66,12 @@ class TurboLander2DEnv(gym.Env):
             low=min_observation, high=max_observation, dtype=np.float32
         )
 
-        self.drone = Drone(
-            Vector2(400, 400), Vector2(0, 0), 3 * np.pi / 2, 0, Vector2(0, 0), 1, 1
-        )
-
     def init_pygame(self):
         pygame.init()
         self.screen = pygame.display.set_mode((800, 800))
         pygame.display.set_caption("TurboLander Environment")
         self.clock = pygame.time.Clock()
+        self.drone.load_sprite(pygame.image.load("images/drone_2.png").convert_alpha())
 
         # script_dir = os.path.dirname(__file__)
         # icon_path = os.path.join("img", "icon.png")
@@ -171,9 +171,7 @@ class TurboLander2DEnv(gym.Env):
             self.drone.sprite,
             self.drone.position,
             (self.drone.width / 2, self.drone.height / 2),
-            helpers.radians_to_degrees(
-                -(self.drone.attitude - (3 * np.pi / 2))
-            ),  # 3pi / 2 to convert from physics to pygame coordinates
+            helpers.radians_to_degrees(-self.drone.attitude),
         )
 
         # # Drawing vectors of motor forces

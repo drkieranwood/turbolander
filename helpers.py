@@ -18,6 +18,23 @@ def radians_to_degrees(rads):
     return rads * 180 / math.pi
 
 
+def box_line_collided(box, line):
+    # check if any of the lines of the box collide with the line
+    for i in range(len(box)):
+        if lines_collided(
+            box[i][0],
+            box[i][1],
+            box[(i + 1) % len(box)][0],
+            box[(i + 1) % len(box)][1],
+            line[0],
+            line[1],
+            line[2],
+            line[3],
+        ):
+            return True
+    return False
+
+
 def lines_collided(x1, y1, x2, y2, x3, y3, x4, y4):
     uA = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / (
         (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
