@@ -40,12 +40,6 @@ class Drone:
             np.sin(self.attitude),
         ).elementwise() * (thrust_1 + thrust_2)
 
-        print(thrust_1, thrust_2)
-
-        print(thrust_vector)
-
-        # scale_to_length(thrust_1 + thrust_2)
-
         gravitational_acceleration = math.Vector2(0, 9.81)
 
         acceleration = (
