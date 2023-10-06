@@ -17,17 +17,18 @@ running = True
 while running:
     # Check for event if user has pushed
     # any event in queue
-    action = [-1, -1]
+    action = [-1.0, -1.0]
     for event in pygame.event.get():
         # if event is of type quit then set
         # running bool to false
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            action[0] = 1
-        if keys[pygame.K_RIGHT]:
-            action[1] = 1
         if event.type == pygame.QUIT:
             running = False
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        action[0] = 1.0
+    if keys[pygame.K_RIGHT]:
+        action[1] = 1.0
 
     environment.step(action)
     environment.render()

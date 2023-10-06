@@ -1,5 +1,6 @@
 # from pygame.math import Vector2
 import pygame.math as math
+import pygame
 import numpy as np
 
 
@@ -22,8 +23,10 @@ class Drone:
         self.mass = mass
         self.rotational_inertia = rotational_inertia
 
-        self.thrust_multiplier = 10
+        self.thrust_multiplier = 20
         self.arm_length = 0.5
+        self.sprite = pygame.image.load("images/drone_2.png").convert_alpha()
+        self.width, self.height = self.sprite.get_size()
 
     def step(self, action, dt):
         u_1 = action[0] / 2 + 0.5
@@ -36,6 +39,10 @@ class Drone:
             np.cos(self.attitude),
             np.sin(self.attitude),
         ).elementwise() * (thrust_1 + thrust_2)
+
+        print(thrust_1, thrust_2)
+
+        print(thrust_vector)
 
         # scale_to_length(thrust_1 + thrust_2)
 

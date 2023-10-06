@@ -7,6 +7,7 @@ import os
 import pygame
 from drone import Drone
 from pygame.math import Vector2
+from helpers import blit_rotate
 
 
 class TurboLander2DEnv(gym.Env):
@@ -71,7 +72,6 @@ class TurboLander2DEnv(gym.Env):
         self.screen = pygame.display.set_mode((800, 800))
         pygame.display.set_caption("TurboLander Environment")
         self.clock = pygame.time.Clock()
-        self.drone_image = pygame.image.load("images/drone.png").convert_alpha()
 
         # script_dir = os.path.dirname(__file__)
         # icon_path = os.path.join("img", "icon.png")
@@ -160,10 +160,18 @@ class TurboLander2DEnv(gym.Env):
         if self.render_sim is False:
             return
         self.screen.fill((243, 243, 243))
-        pygame.draw.rect(self.screen, (24, 114, 139), pygame.Rect(50, 50, 70, 70), 8)
+        # pygame.draw.rect(self.screen, (24, 114, 139), pygame.Rect(50, 50, 70, 70), 8)
 
-        self.screen.blit(
-            self.drone_image, (self.drone.position[0], self.drone.position[1])
+        # self.screen.blit(
+        #     self.drone.sprite, (self.drone.position[0], self.drone.position[1])
+        # )
+
+        blit_rotate(
+            self.screen,
+            self.drone.sprite,
+            self.drone.position,
+            (self.drone.width / 2, self.drone.height / 2),
+            -(self.drone.attitude - (3 * np.pi / 2)) * 180 / np.pi,
         )
 
         # # Drawing vectors of motor forces
