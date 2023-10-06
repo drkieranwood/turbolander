@@ -53,8 +53,9 @@ class TurboLander2DEnv(gym.Env):
         self.right_force = -1
 
         # Generating target position
-        self.x_target = random.uniform(50, 750)
         self.y_target = random.uniform(50, 750)
+        self.z_target = 730
+        # self.z_target = random.uniform(50, 750)
 
         # Defining spaces for action and observation
         min_action = np.array([-1, -1], dtype=np.float32)
@@ -90,7 +91,8 @@ class TurboLander2DEnv(gym.Env):
 
         self.drone.step(action, 1.0 / 60)
         if self.drone.check_collision(self.walls):
-            self.reset()
+            self.done = True
+            # Apply an appropriate negative reward
         self.current_time_step += 1
 
         # Saving drone's position for drawing
@@ -166,6 +168,7 @@ class TurboLander2DEnv(gym.Env):
             return
         self.screen.fill((243, 243, 243))
 
+        # Draw walls
         for wall in self.walls:
             pygame.draw.line(
                 self.screen,
@@ -174,10 +177,8 @@ class TurboLander2DEnv(gym.Env):
                 (wall.coordinates[2], wall.coordinates[3]),
                 8,
             )
-        # self.screen.blit(
-        #     self.drone.sprite, (self.drone.position[0], self.drone.position[1])
-        # )
 
+        # Draw drone
         helpers.blit_rotate(
             self.screen,
             self.drone.sprite,
@@ -186,47 +187,10 @@ class TurboLander2DEnv(gym.Env):
             helpers.radians_to_degrees(-self.drone.attitude),
         )
 
-        # # Drawing vectors of motor forces
-        # vector_scale = 0.05
-        # l_x_1, l_y_1 = self.drone.frame_shape.body.local_to_world(
-        #     (-self.drone_radius, 0)
-        # )
-        # l_x_2, l_y_2 = self.drone.frame_shape.body.local_to_world(
-        #     (-self.drone_radius, self.froce_scale * vector_scale)
-        # )
-        # pygame.draw.line(
-        #     self.screen, (179, 179, 179), (l_x_1, 800 - l_y_1), (l_x_2, 800 - l_y_2), 4
-        # )
+        # Draw target
+        pygame.draw.circle(self.screen, (255, 0, 0), (self.y_target, self.z_target), 5)
 
-        # l_x_2, l_y_2 = self.drone.frame_shape.body.local_to_world(
-        #     (-self.drone_radius, self.left_force * vector_scale)
-        # )
-        # pygame.draw.line(
-        #     self.screen, (255, 0, 0), (l_x_1, 800 - l_y_1), (l_x_2, 800 - l_y_2), 4
-        # )
-
-        # r_x_1, r_y_1 = self.drone.frame_shape.body.local_to_world(
-        #     (self.drone_radius, 0)
-        # )
-        # r_x_2, r_y_2 = self.drone.frame_shape.body.local_to_world(
-        #     (self.drone_radius, self.froce_scale * vector_scale)
-        # )
-        # pygame.draw.line(
-        #     self.screen, (179, 179, 179), (r_x_1, 800 - r_y_1), (r_x_2, 800 - r_y_2), 4
-        # )
-
-        # r_x_2, r_y_2 = self.drone.frame_shape.body.local_to_world(
-        #     (self.drone_radius, self.right_force * vector_scale)
-        # )
-        # pygame.draw.line(
-        #     self.screen, (255, 0, 0), (r_x_1, 800 - r_y_1), (r_x_2, 800 - r_y_2), 4
-        # )
-
-        # pygame.draw.circle(
-        #     self.screen, (255, 0, 0), (self.x_target, 800 - self.y_target), 5
-        # )
-
-        # Drawing drone's path
+        # Draw drone's path
         if len(self.flight_path) > 2:
             pygame.draw.aalines(self.screen, (16, 19, 97), False, self.flight_path)
 
