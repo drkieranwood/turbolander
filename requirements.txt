@@ -1,2 +1,4 @@
-pyglet==2.0.9
-tensorflow==2.13.0
+gymnasium
+stable_baselines3
+numpy
+pygame
