@@ -38,7 +38,6 @@ class Drone:
     def load_sprite(self, sprite):
         self.sprite = sprite
         self.width_px, self.height_px = self.sprite.get_size()
-        print(self.width_px, self.height_px)
         self.update_box()
 
     def step(self, action, dt):

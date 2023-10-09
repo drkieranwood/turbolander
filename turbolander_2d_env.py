@@ -91,7 +91,7 @@ class TurboLander2DEnv(gym.Env):
         self.drone.step(action, 1.0 / 60)
         if self.drone.check_collision(self.walls):
             self.done = True
-            reward = -1
+            reward = -0.5
         self.current_time_step += 1
 
         # Saving drone's position for drawing
