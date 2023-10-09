@@ -15,12 +15,7 @@ class TurboLander2DEnv(gym.Env):
     """
     render_sim: (bool) if true, a graphic is generated
     render_path: (bool) if true, the drone's path is drawn
-    render_shade: (bool) if true, the drone's shade is drawn
-    shade_distance: (int) distance between consecutive drone's shades
     n_steps: (int) number of time steps
-    n_fall_steps: (int) the number of initial steps for which the drone can't do anything
-    change_target: (bool) if true, mouse click change target positions
-    initial_throw: (bool) if true, the drone is initially thrown with random force
     """
 
     def __init__(
@@ -33,9 +28,13 @@ class TurboLander2DEnv(gym.Env):
         self.render_path = render_path
 
         # set up the drone object with default values
-        self.drone = Drone(Vector2(400, 400), Vector2(0, 0), 0, 0, Vector2(0, 0), 1, 1)
+        self.drone = Drone(Vector2(4, 4), Vector2(0, 0), 0, 0, Vector2(0, 0), 1, 0.5)
 
-        self.walls = [Wall([0, 750, 800, 750])]
+        self.max_speed = np.sqrt(
+            2 * 9.81 * (self.drone.thrust_multiplier * 2 / self.drone.mass) * 8
+        )
+
+        self.walls = [Wall([0, 750, 800, 750], 0.6)]
 
         if self.render_sim is True:
             self.init_pygame()
@@ -92,76 +91,67 @@ class TurboLander2DEnv(gym.Env):
         self.drone.step(action, 1.0 / 60)
         if self.drone.check_collision(self.walls):
             self.done = True
-            # Apply an appropriate negative reward
+            reward = -1
         self.current_time_step += 1
 
         # Saving drone's position for drawing
         if self.first_step is True:
             if self.render_sim is True and self.render_path is True:
-                self.add_postion_to_flight_path(self.drone.position)
+                self.add_postion_to_flight_path(self.drone.position_px)
             self.first_step = False
 
         else:
             if self.render_sim is True and self.render_path is True:
-                self.add_postion_to_flight_path(self.drone.position)
+                self.add_postion_to_flight_path(self.drone.position_px)
 
         # Calulating reward function
-        # obs = self.get_observation()
-        # reward = (1.0 / (np.abs(obs[4]) + 0.1)) + (1.0 / (np.abs(obs[5]) + 0.1))
+        obs = self.get_observation()
+        reward = (1.0 / (np.abs(obs[4]) + 2)) + (1.0 / (np.abs(obs[5]) + 2))
 
         # Stops episode, when drone is out of range or overlaps
-        # if np.abs(obs[3]) == 1 or np.abs(obs[6]) == 1 or np.abs(obs[7]) == 1:
-        # self.done = True
-        # reward = -10
+        if np.abs(obs[3]) == 1 or np.abs(obs[6]) == 1 or np.abs(obs[7]) == 1:
+            self.done = True
+            reward = -1
 
         # Stops episode, when time is up
         if self.current_time_step == self.max_time_steps:
             self.done = True
 
-        # return obs, reward, self.done, self.info
+        return obs, reward, self.done, False, self.info
 
     def get_observation(self):
-        # velocity_x, velocity_y = self.drone.frame_shape.body.velocity_at_local_point(
-        #     (0, 0)
-        # )
-        # velocity_x = np.clip(velocity_x / 1330, -1, 1)
-        # velocity_y = np.clip(velocity_y / 1330, -1, 1)
+        velocity_y = np.clip(self.drone.velocity[0] / self.max_speed, -1, 1)
+        velocity_z = np.clip(self.drone.velocity[1] / self.max_speed, -1, 1)
 
-        # omega = self.drone.frame_shape.body.angular_velocity
-        # omega = np.clip(omega / 11.7, -1, 1)
+        angular_velocity = np.clip(self.drone.angular_velocity / 20, -1, 1)
 
-        # alpha = self.drone.frame_shape.body.angle
-        # alpha = np.clip(alpha / (np.pi / 2), -1, 1)
+        attitude = np.clip((self.drone.attitude / np.pi) - 1, -1, 1)
 
-        # x, y = self.drone.frame_shape.body.position
+        position_y = np.clip(
+            (self.drone.position_m[0] / 4) - 1, -1, 1
+        )  # 4 is half the width and height of env in meters
 
-        # if x < self.x_target:
-        #     distance_x = np.clip((x / self.x_target) - 1, -1, 0)
+        position_z = np.clip((self.drone.position_m[1] / 4) - 1, -1, 1)
 
-        # else:
-        #     distance_x = np.clip(
-        #         (-x / (self.x_target - 800) + self.x_target / (self.x_target - 800)),
-        #         0,
-        #         1,
-        #     )
+        target_y_norm = (self.y_target / 400) - 1
+        target_z_norm = (self.z_target / 400) - 1
 
-        # if y < self.y_target:
-        #     distance_y = np.clip((y / self.y_target) - 1, -1, 0)
+        target_dist_y = np.clip(position_y - target_y_norm, -1, 1)
+        target_dist_z = np.clip(position_z - target_z_norm, -1, 1)
 
-        # else:
-        #     distance_y = np.clip(
-        #         (-y / (self.y_target - 800) + self.y_target / (self.y_target - 800)),
-        #         0,
-        #         1,
-        #     )
-
-        # pos_x = np.clip(x / 400.0 - 1, -1, 1)
-        # pos_y = np.clip(y / 400.0 - 1, -1, 1)
-
-        # return np.array(
-        #     [velocity_x, velocity_y, omega, alpha, distance_x, distance_y, pos_x, pos_y]
-        # )
-        pass
+        return np.array(
+            [
+                velocity_y,
+                velocity_z,
+                angular_velocity,
+                attitude,
+                target_dist_y,
+                target_dist_z,
+                position_y,
+                position_z,
+            ],
+            dtype=np.float32,
+        )
 
     def render(self, mode="human", close=False):
         if self.render_sim is False:
@@ -182,8 +172,8 @@ class TurboLander2DEnv(gym.Env):
         helpers.blit_rotate(
             self.screen,
             self.drone.sprite,
-            self.drone.position,
-            (self.drone.width / 2, self.drone.height / 2),
+            self.drone.position_px,
+            (self.drone.width_px / 2, self.drone.height_px / 2),
             helpers.radians_to_degrees(-self.drone.attitude),
         )
 
@@ -197,13 +187,18 @@ class TurboLander2DEnv(gym.Env):
         pygame.display.flip()
         self.clock.tick(60)
 
-    def reset(self):
+    def reset(
+        self,
+        *,
+        seed=None,
+        options=None,
+    ):
         self.__init__(
             self.render_sim,
             self.render_path,
             self.max_time_steps,
         )
-        return self.get_observation()
+        return self.get_observation(), self.info
 
     def close(self):
         pygame.quit()

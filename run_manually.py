@@ -29,9 +29,9 @@ while running:
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
-        action[0] = 1.0
-    if keys[pygame.K_RIGHT]:
         action[1] = 1.0
+    if keys[pygame.K_RIGHT]:
+        action[0] = 1.0
 
     environment.step(action)
     environment.render()

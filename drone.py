@@ -7,7 +7,7 @@ import numpy as np
 class Drone:
     def __init__(
         self,
-        position: math.Vector2,
+        position_m: math.Vector2,
         velocity: math.Vector2,
         attitude: float,
         angular_velocity: float,
@@ -15,16 +15,19 @@ class Drone:
         mass: float,
         rotational_inertia: float,
     ):
-        self.position = position
+        self.position_m = position_m
+        self.position_px = position_m * 100
         self.velocity = velocity
         self.attitude = attitude
         self.angular_velocity = angular_velocity
         self.wind_vector = wind_vector
         self.mass = mass
         self.rotational_inertia = rotational_inertia
+        self.width_px = 50
+        self.height_px = 10
 
         self.thrust_multiplier = 20
-        self.arm_length = 0.5
+        self.arm_length = 0.25
         self.box = [
             [0, 0],
             [0, 0],
@@ -34,7 +37,8 @@ class Drone:
 
     def load_sprite(self, sprite):
         self.sprite = sprite
-        self.width, self.height = self.sprite.get_size()
+        self.width_px, self.height_px = self.sprite.get_size()
+        print(self.width_px, self.height_px)
         self.update_box()
 
     def step(self, action, dt):
@@ -55,7 +59,8 @@ class Drone:
             thrust_vector.elementwise() / self.mass + gravitational_acceleration
         )
         self.velocity = self.velocity + acceleration * dt
-        self.position = self.position + self.velocity * dt
+        self.position_m = self.position_m + self.velocity * dt
+        self.position_px = self.position_m * 100
 
         torque = (thrust_1 - thrust_2) * self.arm_length
         angular_acceleration = torque / self.rotational_inertia
@@ -65,6 +70,10 @@ class Drone:
             np.fmod(self.attitude, 2 * np.pi)
 
         self.update_box()
+        # if self.check_collision(walls):
+        #     v_normal = self.velocity.dot(walls[0].normal) * walls[0].normal
+
+        #     self.velocity = self.velocity - v_normal * 2
 
     def check_collision(self, walls):
         for wall in walls:
@@ -75,23 +84,24 @@ class Drone:
     def update_box(self):
         self.box = [
             helpers.rotate_point(
-                self.position,
-                self.position + math.Vector2(-self.width / 2, -self.height / 2),
+                self.position_px,
+                self.position_px
+                + math.Vector2(-self.width_px / 2, -self.height_px / 2),
                 self.attitude,
             ),
             helpers.rotate_point(
-                self.position,
-                self.position + math.Vector2(self.width / 2, -self.height / 2),
+                self.position_px,
+                self.position_px + math.Vector2(self.width_px / 2, -self.height_px / 2),
                 self.attitude,
             ),
             helpers.rotate_point(
-                self.position,
-                self.position + math.Vector2(-self.width / 2, self.height / 2),
+                self.position_px,
+                self.position_px + math.Vector2(-self.width_px / 2, self.height_px / 2),
                 self.attitude,
             ),
             helpers.rotate_point(
-                self.position,
-                self.position + math.Vector2(self.width / 2, self.height / 2),
+                self.position_px,
+                self.position_px + math.Vector2(self.width_px / 2, self.height_px / 2),
                 self.attitude,
             ),
         ]
