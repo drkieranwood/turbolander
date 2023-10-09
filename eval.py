@@ -28,9 +28,7 @@ env = gym.make(
     n_steps=500,
 )
 
-model = PPO.load("agent_2.zip")
-
-model.set_env(env)
+model = PPO.load("agent_4.zip", env)
 
 random_seed = int(time.time())
 model.set_random_seed(random_seed)
@@ -43,7 +41,6 @@ try:
             env.render()
 
         action, _states = model.predict(obs)
-        print(action)
         obs, reward, done, truncated, info = env.step(action)
 
         if done is True:

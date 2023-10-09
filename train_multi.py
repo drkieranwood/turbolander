@@ -47,5 +47,5 @@ if __name__ == "__main__":
     )
 
     model = PPO("MlpPolicy", vec_env, verbose=1)
-    model.learn(total_timesteps=2000000)
-    model.save("agent_3")
+    model.learn(total_timesteps=20000000)
+    model.save("agent_5")

@@ -28,7 +28,9 @@ class TurboLander2DEnv(gym.Env):
         self.render_path = render_path
 
         # set up the drone object with default values
-        self.drone = Drone(Vector2(4, 4), Vector2(0, 0), 0, 0, Vector2(0, 0), 1, 0.5)
+        self.drone = Drone(
+            Vector2(4, 4), Vector2(0, 0), np.pi, 0, Vector2(0, 0), 1, 0.5
+        )
 
         self.max_speed = np.sqrt(
             2 * 9.81 * (self.drone.thrust_multiplier * 2 / self.drone.mass) * 8
@@ -54,7 +56,7 @@ class TurboLander2DEnv(gym.Env):
         # Generating target position
         self.y_target = random.uniform(50, 750)
         self.z_target = 730
-        # self.z_target = random.uniform(50, 750)
+        # self.z_target = 400
 
         # Defining spaces for action and observation
         min_action = np.array([-1, -1], dtype=np.float32)
@@ -177,7 +179,7 @@ class TurboLander2DEnv(gym.Env):
             self.drone.sprite,
             self.drone.position_px,
             (self.drone.width_px / 2, self.drone.height_px / 2),
-            helpers.radians_to_degrees(-self.drone.attitude),
+            helpers.radians_to_degrees(-self.drone.attitude + np.pi),
         )
 
         # Draw target
