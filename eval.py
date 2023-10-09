@@ -28,15 +28,7 @@ env = gym.make(
     n_steps=500,
 )
 
-"""
-The example agent used here was originally trained with Python 3.7
-For this reason, it is not compatible with Python version >= 3.8
-Agent has been adapted to run in the newer version of Python,
-but because of this, you cannot easily resume their training.
-If you are interested in resuming learning, please use Python 3.7.
-"""
-
-model = PPO.load("agent_1.zip")
+model = PPO.load("agent_2.zip")
 
 model.set_env(env)
 
@@ -51,7 +43,7 @@ try:
             env.render()
 
         action, _states = model.predict(obs)
-
+        print(action)
         obs, reward, done, truncated, info = env.step(action)
 
         if done is True:

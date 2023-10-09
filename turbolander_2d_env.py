@@ -91,7 +91,8 @@ class TurboLander2DEnv(gym.Env):
         self.drone.step(action, 1.0 / 60)
         if self.drone.check_collision(self.walls):
             self.done = True
-            reward = -0.5
+            # reward = -0.5
+            reward = -10
         self.current_time_step += 1
 
         # Saving drone's position for drawing
@@ -106,12 +107,14 @@ class TurboLander2DEnv(gym.Env):
 
         # Calulating reward function
         obs = self.get_observation()
-        reward = (1.0 / (np.abs(obs[4]) + 2)) + (1.0 / (np.abs(obs[5]) + 2))
+        # reward = (1.0 / (np.abs(obs[4]) + 2)) + (1.0 / (np.abs(obs[5]) + 2))
+        reward = (1.0 / (np.abs(obs[4]) + 0.1)) + (1.0 / (np.abs(obs[5]) + 0.1))
 
         # Stops episode, when drone is out of range or overlaps
         if np.abs(obs[3]) == 1 or np.abs(obs[6]) == 1 or np.abs(obs[7]) == 1:
             self.done = True
-            reward = -1
+            # reward = -1
+            reward = -10
 
         # Stops episode, when time is up
         if self.current_time_step == self.max_time_steps:
