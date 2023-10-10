@@ -22,4 +22,4 @@ env = gym.make(
 model = PPO("MlpPolicy", env, verbose=1)
 
 model.learn(total_timesteps=5000000)
-model.save("agent_3")
+model.save("agent_7")
