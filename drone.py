@@ -53,8 +53,8 @@ class Drone:
         # ).elementwise() * (thrust_1 + thrust_2)]
 
         thrust_vector: math.Vector2 = math.Vector2(
-            -np.sin(self.attitude),
-            np.cos(self.attitude),
+            np.sin(self.attitude),
+            -np.cos(self.attitude),
         ).elementwise() * (thrust_1 + thrust_2)
 
         # Changed the upright flight attitude to be pi radians instead of 0 so that the observation is 0 when the drone is upright
@@ -73,8 +73,10 @@ class Drone:
         angular_acceleration = torque / self.rotational_inertia
         self.angular_velocity = self.angular_velocity + angular_acceleration * dt
         self.attitude = self.attitude + self.angular_velocity * dt
-        if self.attitude > 2 * np.pi:
-            np.fmod(self.attitude, 2 * np.pi)
+        if self.attitude > np.pi:
+            self.attitude = -np.pi + np.fmod(self.attitude, np.pi)
+        elif self.attitude < -np.pi:
+            self.attitude = np.pi + np.fmod(self.attitude, np.pi)
 
         self.update_box()
         # if self.check_collision(walls):

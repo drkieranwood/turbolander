@@ -5,9 +5,10 @@ import numpy as np
 import random
 import os
 import pygame
-from drone import Drone
+import pygame.freetype
 from pygame.math import Vector2
 import helpers
+from drone import Drone
 from wall import Wall
 
 
@@ -26,11 +27,11 @@ class TurboLander2DEnv(gym.Env):
     ):
         self.render_sim = render_sim
         self.render_path = render_path
+        self.last_observation = np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float32)
+        self.last_action = np.array([0, 0], dtype=np.float32)
 
         # set up the drone object with default values
-        self.drone = Drone(
-            Vector2(4, 4), Vector2(0, 0), np.pi, 0, Vector2(0, 0), 1, 0.5
-        )
+        self.drone = Drone(Vector2(4, 4), Vector2(0, 0), 0, 0, Vector2(0, 0), 1, 0.5)
 
         self.max_speed = np.sqrt(
             2 * 9.81 * (self.drone.thrust_multiplier * 2 / self.drone.mass) * 8
@@ -78,15 +79,6 @@ class TurboLander2DEnv(gym.Env):
         self.clock = pygame.time.Clock()
         self.drone.load_sprite(pygame.image.load("images/drone_2.png").convert_alpha())
 
-        # script_dir = os.path.dirname(__file__)
-        # icon_path = os.path.join("img", "icon.png")
-        # icon_path = os.path.join(script_dir, icon_path)
-        # pygame.display.set_icon(pygame.image.load(icon_path))
-
-        # img_path = os.path.join("img", "shade.png")
-        # img_path = os.path.join(script_dir, img_path)
-        # self.shade_image = pygame.image.load(img_path)
-
     def step(self, action):
         # if self.first_step is True:
 
@@ -122,6 +114,9 @@ class TurboLander2DEnv(gym.Env):
         if self.current_time_step == self.max_time_steps:
             self.done = True
 
+        self.last_observation = obs
+        self.last_action = action
+
         return obs, reward, self.done, False, self.info
 
     def get_observation(self):
@@ -130,7 +125,7 @@ class TurboLander2DEnv(gym.Env):
 
         angular_velocity = np.clip(self.drone.angular_velocity / 20, -1, 1)
 
-        attitude = np.clip((self.drone.attitude / np.pi) - 1, -1, 1)
+        attitude = np.clip(self.drone.attitude / np.pi, -1, 1)
 
         position_y = np.clip(
             (self.drone.position_m[0] / 4) - 1, -1, 1
@@ -173,13 +168,15 @@ class TurboLander2DEnv(gym.Env):
                 8,
             )
 
+        self.draw_ui()
+
         # Draw drone
         helpers.blit_rotate(
             self.screen,
             self.drone.sprite,
             self.drone.position_px,
             (self.drone.width_px / 2, self.drone.height_px / 2),
-            helpers.radians_to_degrees(-self.drone.attitude + np.pi),
+            helpers.radians_to_degrees(-self.drone.attitude),
         )
 
         # Draw target
@@ -191,6 +188,79 @@ class TurboLander2DEnv(gym.Env):
 
         pygame.display.flip()
         self.clock.tick(60)
+
+    def draw_ui(self):
+        # Draw left throttle command
+        pygame.draw.line(  # Background
+            self.screen,
+            (211, 211, 211),
+            (20, 120),
+            (20, 20),
+            8,
+        )
+        pygame.draw.line(  # Throttle 1 bar
+            self.screen,
+            (255, 105, 97),
+            (20, 120),
+            (20, 120 - np.rint(((self.last_action[0] + 1) / 2 * 100))),
+            8,
+        )
+
+        # Draw right throttle command
+        pygame.draw.line(  # Background
+            self.screen,
+            (211, 211, 211),
+            (40, 120),
+            (40, 20),
+            8,
+        )
+
+        pygame.draw.line(  # Throttle 2 bar
+            self.screen,
+            (255, 105, 97),
+            (40, 120),
+            (40, 120 - np.rint(((self.last_action[1] + 1) / 2 * 100))),
+            8,
+        )
+
+        # Draw observations
+        offset = 13
+        ft_font = pygame.freetype.Font(None, 11)
+        ft_font.render_to(self.screen, (50, 21), "v", (0, 0, 0))
+        ft_font.render_to(self.screen, (50, 21 + offset), "w", (0, 0, 0))
+        ft_font.render_to(self.screen, (50, 21 + 2 * offset), "p", (0, 0, 0))
+        ft_font.render_to(self.screen, (50, 21 + 3 * offset), "phi", (0, 0, 0))
+        ft_font.render_to(self.screen, (50, 21 + 4 * offset), "d_y", (0, 0, 0))
+        ft_font.render_to(self.screen, (50, 21 + 5 * offset), "d_z", (0, 0, 0))
+        ft_font.render_to(self.screen, (50, 21 + 6 * offset), "y", (0, 0, 0))
+        ft_font.render_to(self.screen, (50, 21 + 7 * offset), "z", (0, 0, 0))
+
+        current_offset = 0
+        for observation in self.last_observation:
+            pygame.draw.line(
+                self.screen,
+                (211, 211, 211),
+                (75, 23 + current_offset),
+                (115, 23 + current_offset),
+                8,
+            )
+            rounded_observation = np.rint(observation * 20)
+            if rounded_observation != 0:
+                pygame.draw.line(
+                    self.screen,
+                    (255, 184, 97),
+                    (95, 23 + current_offset),
+                    (95 + rounded_observation, 23 + current_offset),
+                    8,
+                )
+            pygame.draw.line(
+                self.screen,
+                (255, 32, 21),
+                (95, 20 + current_offset),
+                (95, 27 + current_offset),
+                1,
+            )
+            current_offset = current_offset + offset
 
     def reset(
         self,
