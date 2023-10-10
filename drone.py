@@ -47,10 +47,18 @@ class Drone:
         thrust_1 = u_1 * self.thrust_multiplier
         thrust_2 = u_2 * self.thrust_multiplier
 
+        # thrust_vector: math.Vector2 = math.Vector2(
+        #     np.sin(self.attitude),
+        #     -np.cos(self.attitude),
+        # ).elementwise() * (thrust_1 + thrust_2)]
+
         thrust_vector: math.Vector2 = math.Vector2(
-            np.sin(self.attitude),
-            -np.cos(self.attitude),
+            -np.sin(self.attitude),
+            np.cos(self.attitude),
         ).elementwise() * (thrust_1 + thrust_2)
+
+        # Changed the upright flight attitude to be pi radians instead of 0 so that the observation is 0 when the drone is upright
+        # means that there isnt a discontinous change in observation when the drone rolls left causing failure as it went to -1 and caused end of episode
 
         gravitational_acceleration = math.Vector2(0, 9.81)
 
