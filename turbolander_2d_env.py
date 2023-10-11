@@ -7,9 +7,9 @@ import os
 import pygame
 import pygame.freetype
 from pygame.math import Vector2
-import helpers
-from drone import Drone
-from wall import Wall
+from . import helpers
+from .drone import Drone
+from .wall import Wall
 
 
 class TurboLander2DEnv(gym.Env):

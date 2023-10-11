@@ -1,6 +1,6 @@
 # from pygame.math import Vector2
 import pygame.math as math
-import helpers
+from . import helpers
 import numpy as np
 
 

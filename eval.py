@@ -28,7 +28,7 @@ env = gym.make(
     n_steps=500,
 )
 
-model = PPO.load("agent_4.zip", env)
+model = PPO.load("models/agent_4.zip", env)
 
 random_seed = int(time.time())
 model.set_random_seed(random_seed)
