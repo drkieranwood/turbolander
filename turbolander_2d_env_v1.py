@@ -98,18 +98,42 @@ class TurboLander2DEnvV1(gym.Env):
         # if self.first_step is True:
         reward = 0
         self.drone.step(action, 1.0 / 60)
+        obs = self.get_observation()
         collided, landed = self.drone.check_collision(self.walls)
+        # if collided:
+        #     self.done = True
+        #     if (
+        #         landed
+        #         and self.drone.velocity.magnitude() < 0.2
+        #         and abs(self.drone.attitude) < 15 * np.pi / 180
+        #     ):
+        #         if (
+        #             abs(self.drone.position_m[0] - self.y_target_m)
+        #             < self.target_radius_m
+        #         ):
+        #             reward += (self.max_time_steps * 2) - (self.current_time_step * 2)
+        #             print("LANDED")
+        #         else:
+        #             reward += 10
+        #             print("Landed but not on target")
+        #     else:
+        #         reward += -50
+
         if collided:
             self.done = True
-            if (
-                landed
-                and self.drone.velocity.magnitude() < 0.2
-                and abs(self.drone.attitude) < 15 * np.pi / 180
-                # and abs(self.drone.angular_velocity) < 0.05
-                and abs(self.drone.position_m[0] - self.y_target_m)
-                < self.target_radius_m
-            ):
-                reward += (self.max_time_steps * 2) - (self.current_time_step * 2)
+            if landed:
+                reward += 100 + 1000 * np.exp(
+                    -10
+                    * (np.abs(obs[4]) + (1 - np.abs(obs[1])) + (1 - np.abs(obs[3])))
+                    / 3
+                )
+                if (
+                    abs(self.drone.position_m[0] - self.y_target_m)
+                    > self.target_radius_m
+                ):
+                    print("LANDED")
+                else:
+                    print("Landed but not on target")
             else:
                 reward += -100
 
@@ -124,7 +148,6 @@ class TurboLander2DEnvV1(gym.Env):
                 self.add_postion_to_flight_path(self.drone.position_px)
 
         # Calulating reward function
-        obs = self.get_observation()
         # reward += (
         #     (1.0 / (np.abs(obs[4]) + 0.01)) + (1.0 / (np.abs(obs[5]) + 0.01))
         # ) / 200
@@ -136,6 +159,8 @@ class TurboLander2DEnvV1(gym.Env):
             self.done = True
             reward += -100
             # reward = -10
+
+        # reward -= 0.25  # Penalty for each time step
 
         # Stops episode, when time is up
         self.current_time_step += 1
