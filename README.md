@@ -25,5 +25,5 @@ To evaluate a model with rl_zoo3 run the following from a terminal in the direct
 ```python3 -m rl_zoo3.enjoy --algo ppo --env turbolander-2d-custom-v1 -f turbolander/models/ --exp-id 14 --load-best```
 
 To train a model with rl_zoo3:
-```python3 -m rl_zoo3.train --algo ppo --gym-packages turbolander --env turbolander-2d-custom-v1 --progress --conf-file turbolander/hyperparameters_v1.yml -n 2000000 --eval-freq 10000 --eval-episodes 10 --n-eval-envs 1
-```
+
+```python3 -m rl_zoo3.train --algo ppo --gym-packages turbolander --env turbolander-2d-custom-v1 --progress --conf-file turbolander/hyperparameters_v1.yml -n 2000000 --eval-freq 10000 --eval-episodes 10 --n-eval-envs 1```
