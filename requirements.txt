@@ -2,3 +2,4 @@ gymnasium
 stable_baselines3
 numpy
 pygame
+rl_zoo3

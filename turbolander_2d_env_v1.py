@@ -12,6 +12,7 @@ from .drone import Drone
 from .wall import Wall
 from typing import Optional
 import pathlib
+import time
 
 
 class TurboLander2DEnvV1(gym.Env):
@@ -28,6 +29,7 @@ class TurboLander2DEnvV1(gym.Env):
         render_path=True,
         n_steps=500,
     ):
+        self.last_frame_time = 0
         self.render_mode = render_mode
         self.render_path = render_path
         self.last_observation = np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float32)
@@ -123,10 +125,11 @@ class TurboLander2DEnvV1(gym.Env):
 
         # Calulating reward function
         obs = self.get_observation()
-        # provides a max reward of 1 if on top of point
-        reward += (
-            (1.0 / (np.abs(obs[4]) + 0.01)) + (1.0 / (np.abs(obs[5]) + 0.01))
-        ) / 200
+        # reward += (
+        #     (1.0 / (np.abs(obs[4]) + 0.01)) + (1.0 / (np.abs(obs[5]) + 0.01))
+        # ) / 200
+
+        reward += np.exp(-5 * (np.abs(obs[4]) + np.abs(obs[5])))
 
         # Stops episode, when drone is out of range or overlaps
         if np.abs(obs[3]) == 1 or np.abs(obs[6]) == 1 or np.abs(obs[7]) == 1:
