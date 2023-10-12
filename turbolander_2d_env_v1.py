@@ -42,7 +42,7 @@ class TurboLander2DEnvV1(gym.Env):
             2 * 9.81 * (self.drone.thrust_multiplier * 2 / self.drone.mass) * 8
         )
 
-        self.walls = [Wall([0, 750, 800, 750], 0.6)]
+        self.walls = [Wall([0, 750, 800, 750], 0.6, True)]
 
         # if self.render_sim is True:
         #     self.init_pygame()
@@ -119,21 +119,36 @@ class TurboLander2DEnvV1(gym.Env):
         #     else:
         #         reward += -50
 
+        # if collided:
+        #     self.done = True
+        #     if landed:
+        #         reward += 1000 * np.exp(
+        #             -10
+        #             * (np.abs(obs[4]) + (1 - np.abs(obs[1])) + (1 - np.abs(obs[3])))
+        #             / 3
+        #         )
+        #         if (
+        #             abs(self.drone.position_m[0] - self.y_target_m)
+        #             > self.target_radius_m
+        #         ):
+        #             print("LANDED")
+        #         else:
+        #             print("Landed but not on target")
+        #     else:
+        #         reward += -100
+
         if collided:
             self.done = True
             if landed:
-                reward += 100 + 1000 * np.exp(
-                    -10
-                    * (np.abs(obs[4]) + (1 - np.abs(obs[1])) + (1 - np.abs(obs[3])))
-                    / 3
-                )
                 if (
                     abs(self.drone.position_m[0] - self.y_target_m)
-                    > self.target_radius_m
+                    < self.target_radius_m
                 ):
-                    print("LANDED")
+                    reward += 1000 * np.exp(
+                        -2 * ((1 - np.abs(obs[1])) + (1 - np.abs(obs[3])))
+                    )
                 else:
-                    print("Landed but not on target")
+                    reward += -50
             else:
                 reward += -100
 
@@ -152,7 +167,13 @@ class TurboLander2DEnvV1(gym.Env):
         #     (1.0 / (np.abs(obs[4]) + 0.01)) + (1.0 / (np.abs(obs[5]) + 0.01))
         # ) / 200
 
-        reward += np.exp(-5 * (np.abs(obs[4]) + np.abs(obs[5])))
+        # reward += np.exp(
+        #     -5 * (np.abs(obs[4]) + np.abs(obs[5]))
+        # )  # Attraction to landing point
+        reward += (
+            1 - (np.abs(obs[4]) + np.abs(obs[5])) / 2
+        )  # Attraction to landing point
+        reward -= np.abs(obs[3])  # Making it not want to tilt too much
 
         # Stops episode, when drone is out of range or overlaps
         if np.abs(obs[3]) == 1 or np.abs(obs[6]) == 1 or np.abs(obs[7]) == 1:
