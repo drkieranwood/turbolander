@@ -87,8 +87,10 @@ class Drone:
     def check_collision(self, walls):
         for wall in walls:
             if helpers.box_line_collided(self.box, wall.coordinates):
-                return True
-        return False
+                if wall.is_ground:
+                    return True, True
+                return True, False
+        return False, False
 
     def update_box(self):
         self.box = [
