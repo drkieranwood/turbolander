@@ -100,24 +100,22 @@ class TurboLander2DEnvV1(gym.Env):
         self.drone.step(action, 1.0 / 60)
         obs = self.get_observation()
         collided, landed = self.drone.check_collision(self.walls)
-        # if collided:
-        #     self.done = True
-        #     if (
-        #         landed
-        #         and self.drone.velocity.magnitude() < 0.2
-        #         and abs(self.drone.attitude) < 15 * np.pi / 180
-        #     ):
-        #         if (
-        #             abs(self.drone.position_m[0] - self.y_target_m)
-        #             < self.target_radius_m
-        #         ):
-        #             reward += (self.max_time_steps * 2) - (self.current_time_step * 2)
-        #             print("LANDED")
-        #         else:
-        #             reward += 10
-        #             print("Landed but not on target")
-        #     else:
-        #         reward += -50
+        if collided:
+            self.done = True
+            if (
+                landed
+                and self.drone.velocity.magnitude() < 0.2
+                and abs(self.drone.attitude) < 15 * np.pi / 180
+            ):
+                if (
+                    abs(self.drone.position_m[0] - self.y_target_m)
+                    < self.target_radius_m
+                ):
+                    reward += (self.max_time_steps * 2) - (self.current_time_step * 2)
+                else:
+                    reward += 10
+            else:
+                reward += -50
 
         # if collided:
         #     self.done = True
@@ -137,20 +135,20 @@ class TurboLander2DEnvV1(gym.Env):
         #     else:
         #         reward += -100
 
-        if collided:
-            self.done = True
-            if landed:
-                if (
-                    abs(self.drone.position_m[0] - self.y_target_m)
-                    < self.target_radius_m
-                ):
-                    reward += 1000 * np.exp(
-                        -2 * ((1 - np.abs(obs[1])) + (1 - np.abs(obs[3])))
-                    )
-                else:
-                    reward += -50
-            else:
-                reward += -100
+        # if collided:
+        #     self.done = True
+        #     if landed:
+        #         if (
+        #             abs(self.drone.position_m[0] - self.y_target_m)
+        #             < self.target_radius_m
+        #         ):
+        #             reward += 1000 * np.exp(
+        #                 -2 * ((1 - np.abs(obs[1])) + (1 - np.abs(obs[3])))
+        #             )
+        #         else:
+        #             reward += -50
+        #     else:
+        #         reward += -100
 
         # Saving drone's position for drawing
         if self.first_step is True:
@@ -167,13 +165,13 @@ class TurboLander2DEnvV1(gym.Env):
         #     (1.0 / (np.abs(obs[4]) + 0.01)) + (1.0 / (np.abs(obs[5]) + 0.01))
         # ) / 200
 
-        # reward += np.exp(
-        #     -5 * (np.abs(obs[4]) + np.abs(obs[5]))
-        # )  # Attraction to landing point
-        reward += (
-            1 - (np.abs(obs[4]) + np.abs(obs[5])) / 2
+        reward += np.exp(
+            -5 * (np.abs(obs[4]) + np.abs(obs[5]))
         )  # Attraction to landing point
-        reward -= np.abs(obs[3])  # Making it not want to tilt too much
+        # reward += (
+        #    1 - (np.abs(obs[4]) + np.abs(obs[5])) / 2
+        # )  # Attraction to landing point
+        # reward -= np.abs(obs[3])  # Making it not want to tilt too much
 
         # Stops episode, when drone is out of range or overlaps
         if np.abs(obs[3]) == 1 or np.abs(obs[6]) == 1 or np.abs(obs[7]) == 1:
@@ -181,7 +179,7 @@ class TurboLander2DEnvV1(gym.Env):
             reward += -100
             # reward = -10
 
-        # reward -= 0.25  # Penalty for each time step
+        reward -= 0.25  # Penalty for each time step
 
         # Stops episode, when time is up
         self.current_time_step += 1
