@@ -146,13 +146,22 @@ class TurboLander2DEnvV1(gym.Env):
         #     else:
         #         reward += -100
 
-        if collided:  # Used for model 39
+        # if collided:  # Used for model 39 + 40 (is wrong)
+        #     self.done = True
+        #     if landed:
+        #         reward += 10000 * np.exp(
+        #             -5
+        #             * (np.abs(obs[4]) + (1 - np.abs(obs[1])) + (1 - np.abs(obs[3])))
+        #             / 3
+        #         )
+        #     else:
+        #         reward += -100
+
+        if collided:  # Used for model 41
             self.done = True
             if landed:
-                reward += 10000 * np.exp(
-                    -5
-                    * (np.abs(obs[4]) + (1 - np.abs(obs[1])) + (1 - np.abs(obs[3])))
-                    / 3
+                reward += 1000 * np.exp(
+                    -5 * (np.abs(obs[4]) + np.abs(obs[1]) + np.abs(obs[3])) / 3
                 )
             else:
                 reward += -100
