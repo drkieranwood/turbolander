@@ -16,7 +16,11 @@ import time
 
 
 class TurboLander2DEnvV1(gym.Env):
-    metadata = {"render_modes": ["human"], "render_fps": 60}
+    metadata = {
+        "render_modes": ["human", "rgb_array"],
+        "render_fps": 60,
+        "video.frames_per_second": 60,
+    }
     """
     render_sim: (bool) if true, a graphic is generated
     render_path: (bool) if true, the drone's path is drawn
@@ -47,7 +51,7 @@ class TurboLander2DEnvV1(gym.Env):
         # if self.render_sim is True:
         #     self.init_pygame()
         #     self.flight_path = []
-        if self.render_mode == "human":
+        if self.render_mode == "human" or self.render_mode == "rgb_array":
             self.init_pygame()
             self.flight_path = []
 
@@ -100,40 +104,58 @@ class TurboLander2DEnvV1(gym.Env):
         self.drone.step(action, 1.0 / 60)
         obs = self.get_observation()
         collided, landed = self.drone.check_collision(self.walls)
-        if collided:
-            self.done = True
-            if (
-                landed
-                and self.drone.velocity.magnitude() < 0.2
-                and abs(self.drone.attitude) < 15 * np.pi / 180
-            ):
-                if (
-                    abs(self.drone.position_m[0] - self.y_target_m)
-                    < self.target_radius_m
-                ):
-                    reward += (self.max_time_steps * 2) - (self.current_time_step * 2)
-                else:
-                    reward += 10
-            else:
-                reward += -50
+        # if collided: # Used for models 34, 35 + 36
+        #     self.done = True
+        #     if (
+        #         landed
+        #         and self.drone.velocity.magnitude() < 0.5
+        #         and abs(self.drone.attitude) < 15 * (np.pi / 180)
+        #     ):
+        #         if (
+        #             abs(self.drone.position_m[0] - self.y_target_m)
+        #             < self.target_radius_m
+        #         ):
+        #             reward += (self.max_time_steps * 2) - (self.current_time_step * 2)
+        #         else:
+        #             reward += 10
+        #     else:
+        #         reward += -50
 
-        # if collided:
+        # if collided:  # Used for models 33 + 37
         #     self.done = True
         #     if landed:
         #         reward += 1000 * np.exp(
-        #             -10
+        #             -5
         #             * (np.abs(obs[4]) + (1 - np.abs(obs[1])) + (1 - np.abs(obs[3])))
         #             / 3
         #         )
-        #         if (
-        #             abs(self.drone.position_m[0] - self.y_target_m)
-        #             > self.target_radius_m
-        #         ):
-        #             print("LANDED")
-        #         else:
-        #             print("Landed but not on target")
         #     else:
         #         reward += -100
+
+        # if collided:  # Used for model 38
+        #     self.done = True
+        #     if landed:
+        #         reward += (
+        #             10000
+        #             * np.exp(
+        #                 -5
+        #                 * (np.abs(obs[4]) + (1 - np.abs(obs[1])) + (1 - np.abs(obs[3])))
+        #                 / 3
+        #             )
+        #         ) * (1 / (self.current_time_step + 0.001))
+        #     else:
+        #         reward += -100
+
+        if collided:  # Used for model 39
+            self.done = True
+            if landed:
+                reward += 10000 * np.exp(
+                    -5
+                    * (np.abs(obs[4]) + (1 - np.abs(obs[1])) + (1 - np.abs(obs[3])))
+                    / 3
+                )
+            else:
+                reward += -100
 
         # if collided:
         #     self.done = True
@@ -165,9 +187,10 @@ class TurboLander2DEnvV1(gym.Env):
         #     (1.0 / (np.abs(obs[4]) + 0.01)) + (1.0 / (np.abs(obs[5]) + 0.01))
         # ) / 200
 
-        reward += np.exp(
-            -5 * (np.abs(obs[4]) + np.abs(obs[5]))
-        )  # Attraction to landing point
+        # reward += np.exp(
+        #     -5 * (np.abs(obs[4]) + np.abs(obs[5]))
+        # )  # Attraction to landing point (used for model 22)
+
         # reward += (
         #    1 - (np.abs(obs[4]) + np.abs(obs[5])) / 2
         # )  # Attraction to landing point
@@ -179,7 +202,8 @@ class TurboLander2DEnvV1(gym.Env):
             reward += -100
             # reward = -10
 
-        reward -= 0.25  # Penalty for each time step
+        # REMOVE
+        reward -= 0.25  # Penalty for each time step used for models 35 + 36
 
         # Stops episode, when time is up
         self.current_time_step += 1
@@ -228,7 +252,7 @@ class TurboLander2DEnvV1(gym.Env):
         )
 
     def render(self):
-        if self.render_mode != "human":
+        if self.render_mode == None:
             return
         self.screen.fill((243, 243, 243))
 
@@ -273,8 +297,13 @@ class TurboLander2DEnvV1(gym.Env):
         if len(self.flight_path) > 2:
             pygame.draw.aalines(self.screen, (16, 19, 97), False, self.flight_path)
 
-        pygame.display.flip()
-        self.clock.tick(60)
+        if self.render_mode == "human":
+            pygame.display.flip()
+            self.clock.tick(60)
+        elif self.render_mode == "rgb_array":
+            return np.transpose(
+                np.array(pygame.surfarray.pixels3d(self.screen)), axes=(1, 0, 2)
+            )
 
     def draw_ui(self):
         # Draw left throttle command
