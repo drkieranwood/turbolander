@@ -1,0 +1,81 @@
+!!python/object/apply:collections.OrderedDict
+- - - algo
+    - ppo
+  - - conf_file
+    - turbolander/hyperparameters_v1.yml
+  - - device
+    - auto
+  - - env
+    - turbolander-2d-custom-v1
+  - - env_kwargs
+    - null
+  - - eval_episodes
+    - 10
+  - - eval_freq
+    - 10000
+  - - gym_packages
+    - - turbolander
+  - - hyperparams
+    - null
+  - - log_folder
+    - turbolander/models
+  - - log_interval
+    - -1
+  - - max_total_trials
+    - null
+  - - n_eval_envs
+    - 1
+  - - n_evaluations
+    - null
+  - - n_jobs
+    - 1
+  - - n_startup_trials
+    - 10
+  - - n_timesteps
+    - 5000000
+  - - n_trials
+    - 500
+  - - no_optim_plots
+    - false
+  - - num_threads
+    - -1
+  - - optimization_log_path
+    - null
+  - - optimize_hyperparameters
+    - false
+  - - progress
+    - true
+  - - pruner
+    - median
+  - - sampler
+    - tpe
+  - - save_freq
+    - -1
+  - - save_replay_buffer
+    - false
+  - - seed
+    - 921184838
+  - - storage
+    - null
+  - - study_name
+    - null
+  - - tensorboard_log
+    - ''
+  - - track
+    - false
+  - - trained_agent
+    - turbolander/models/ppo/turbolander-2d-custom-v1_44/best_model.zip
+  - - truncate_last_trajectory
+    - true
+  - - uuid
+    - false
+  - - vec_env
+    - dummy
+  - - verbose
+    - 1
+  - - wandb_entity
+    - null
+  - - wandb_project_name
+    - sb3
+  - - wandb_tags
+    - []

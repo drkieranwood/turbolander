@@ -11,7 +11,6 @@ class Drone:
         velocity: math.Vector2,
         attitude: float,
         angular_velocity: float,
-        wind_vector: math.Vector2,
         mass: float,
         rotational_inertia: float,
     ):
@@ -20,9 +19,11 @@ class Drone:
         self.velocity = velocity
         self.attitude = attitude
         self.angular_velocity = angular_velocity
-        self.wind_vector = wind_vector
         self.mass = mass
         self.rotational_inertia = rotational_inertia
+        self.drag_coefficient = 0.5
+        self.reference_area = 0.1
+        self.air_density = 1.225
         self.width_px = 50
         self.height_px = 10
 
@@ -40,7 +41,7 @@ class Drone:
         self.width_px, self.height_px = self.sprite.get_size()
         self.update_box()
 
-    def step(self, action, dt):
+    def step(self, action, dt, wind_vector):
         u_1 = action[0] / 2 + 0.5
         u_2 = action[1] / 2 + 0.5
 
@@ -62,9 +63,26 @@ class Drone:
 
         gravitational_acceleration = math.Vector2(0, 9.81)
 
+        air_relative_velocity = self.velocity - wind_vector
+
+        drag = (
+            0.5
+            * self.drag_coefficient
+            * self.reference_area
+            * self.air_density
+            * (air_relative_velocity.magnitude() ** 2)
+        ) * -air_relative_velocity.normalize()
+
+        # acceleration = (
+        #     thrust_vector.elementwise() / self.mass + gravitational_acceleration
+        # )
+
         acceleration = (
-            thrust_vector.elementwise() / self.mass + gravitational_acceleration
+            thrust_vector.elementwise() / self.mass
+            + gravitational_acceleration
+            + drag.elementwise() / self.mass
         )
+
         self.velocity = self.velocity + acceleration * dt
         self.position_m = self.position_m + self.velocity * dt
         self.position_px = self.position_m * 100

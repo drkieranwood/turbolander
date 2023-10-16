@@ -45,7 +45,7 @@ class TurboLander2DEnvV1(gym.Env):
         self.wind_vector = Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
 
         # set up the drone object with default values
-        self.drone = Drone(Vector2(4, 4), Vector2(0, 0), 0, 0, Vector2(0, 0), 1, 0.5)
+        self.drone = Drone(Vector2(4, 4), Vector2(0, 0), 0, 0, 1, 0.5)
 
         self.max_speed = np.sqrt(
             2 * 9.81 * (self.drone.thrust_multiplier * 2 / self.drone.mass) * 8
@@ -106,34 +106,106 @@ class TurboLander2DEnvV1(gym.Env):
     def step(self, action):
         # if self.first_step is True:
         reward = 0
-        self.drone.step(action, 1.0 / 60)
+        self.drone.step(action, 1.0 / 60, self.wind_vector)
         obs = self.get_observation()
         collided, landed = self.drone.check_collision(self.walls)
 
-        if collided:  # Used for model 41 + 42
+        # if collided:  # Used for model 41 + 42 + 44
+        #     self.done = True
+        #     if landed:
+        #         reward += 1000 * np.exp(
+        #             -5
+        #             * (
+        #                 np.abs(obs[4])
+        #                 + np.abs(obs[0])
+        #                 + np.abs(obs[1])
+        #                 + np.abs(obs[3])
+        #             )
+        #             / 4
+        #         )
+        #     else:
+        #         reward += -100
+
+        # if collided:  # Used for model 45
+        #     self.done = True
+        #     if landed:
+        #         reward += 1000 * np.exp(
+        #             -10
+        #             * (
+        #                 np.abs(obs[4])
+        #                 + np.abs(obs[0])
+        #                 + np.abs(obs[1])
+        #                 + np.abs(obs[3])
+        #             )
+        #             / 4
+        #         )
+        #     else:
+        #         reward += -100
+
+        # if collided:  # Used for model 46, 47, 48 and 49 (only 49 has 10x for horizontal speed, others has 2x)
+        #     self.done = True
+        #     if landed:
+        #         reward += 1000 * np.exp(
+        #             -5
+        #             * (
+        #                 np.abs(obs[4])
+        #                 + np.abs(obs[0]) * 10
+        #                 + np.abs(obs[1]) * 2
+        #                 + np.abs(obs[3])
+        #             )
+        #             / 14
+        #         )
+        #     else:
+        #         reward += -100
+
+        # if collided:  # Used for model 50
+        #     self.done = True
+        #     if landed:
+        #         reward += 1000 * np.exp(
+        #             -5
+        #             * (
+        #                 np.abs(obs[4])
+        #                 + np.abs(obs[0]) * 10
+        #                 + np.abs(obs[1]) * 2
+        #                 + np.abs(obs[3])
+        #             )
+        #             / 14
+        #         ) - (self.current_time_step * 2)
+        #     else:
+        #         reward += -100
+
+        if collided:  # Used for model 51
             self.done = True
             if landed:
-                reward += 1000 * np.exp(
-                    -5
-                    * (
-                        np.abs(obs[4])
-                        + np.abs(obs[0])
-                        + np.abs(obs[1])
-                        + np.abs(obs[3])
+                reward += (
+                    1000
+                    * np.exp(
+                        -5
+                        * (
+                            np.abs(obs[4])
+                            + np.abs(obs[0]) * 2
+                            + np.abs(obs[1])
+                            + np.abs(obs[3])
+                        )
+                        / 14
                     )
-                    / 4
+                    - self.current_time_step
                 )
             else:
                 reward += -100
 
         # Saving drone's position for drawing
         if self.first_step is True:
-            if self.render_mode == "human" and self.render_path is True:
+            if (
+                self.render_mode == "human" or self.render_mode == "rgb_array"
+            ) and self.render_path is True:
                 self.add_postion_to_flight_path(self.drone.position_px)
             self.first_step = False
 
         else:
-            if self.render_mode == "human" and self.render_path is True:
+            if (
+                self.render_mode == "human" or self.render_mode == "rgb_array"
+            ) and self.render_path is True:
                 self.add_postion_to_flight_path(self.drone.position_px)
 
         # reward += np.exp(
@@ -146,8 +218,7 @@ class TurboLander2DEnvV1(gym.Env):
             reward += -100
             # reward = -10
 
-        # REMOVE
-        reward -= 0.25  # Penalty for each time step used for models 35 + 36
+        # reward -= 0.25  # Penalty for each time step used for models 35 + 36 and 46, 47, 48 and 49
 
         # Stops episode, when time is up
         self.current_time_step += 1
