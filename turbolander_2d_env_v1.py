@@ -33,11 +33,16 @@ class TurboLander2DEnvV1(gym.Env):
         render_path=True,
         n_steps=500,
     ):
+        self.screen_width = 800
+        self.screen_height = 800
         self.last_frame_time = 0
         self.render_mode = render_mode
         self.render_path = render_path
         self.last_observation = np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float32)
         self.last_action = np.array([0, 0], dtype=np.float32)
+
+        # Generate wind vector
+        self.wind_vector = Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
 
         # set up the drone object with default values
         self.drone = Drone(Vector2(4, 4), Vector2(0, 0), 0, 0, Vector2(0, 0), 1, 0.5)
@@ -88,7 +93,7 @@ class TurboLander2DEnvV1(gym.Env):
 
     def init_pygame(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((800, 800))
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption("TurboLander Environment")
         self.clock = pygame.time.Clock()
 
@@ -316,6 +321,17 @@ class TurboLander2DEnvV1(gym.Env):
                 1,
             )
             current_offset = current_offset + offset
+
+        # Draw wind vector
+        helpers.draw_arrow(
+            self.screen,
+            Vector2(self.screen_width - 60, 60) - self.wind_vector.normalize() * 50,
+            Vector2(self.screen_width - 60, 60) + self.wind_vector.normalize() * 50,
+            (108, 171, 221),
+            self.wind_vector.magnitude(),
+            self.wind_vector.magnitude() * 2,
+            self.wind_vector.magnitude() * 2,
+        )
 
     def reset(
         self,
