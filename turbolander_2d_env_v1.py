@@ -110,89 +110,65 @@ class TurboLander2DEnvV1(gym.Env):
         obs = self.get_observation()
         collided, landed = self.drone.check_collision(self.walls)
 
-        # if collided:  # Used for model 41 + 42 + 44
-        #     self.done = True
-        #     if landed:
-        #         reward += 1000 * np.exp(
-        #             -5
-        #             * (
-        #                 np.abs(obs[4])
-        #                 + np.abs(obs[0])
-        #                 + np.abs(obs[1])
-        #                 + np.abs(obs[3])
-        #             )
-        #             / 4
-        #         )
-        #     else:
-        #         reward += -100
+        if collided:  # new test reward
+            self.done = True
+            if (
+                landed
+                and abs(self.drone.velocity[0]) < 1
+                and abs(self.drone.velocity[1]) < 0.5
+                and abs(self.drone.attitude) < 15 * (np.pi / 180)
+            ):
+                if (
+                    abs(self.drone.position_m[0] - self.y_target_m)
+                    < self.target_radius_m
+                ):
+                    reward += 2000
+                else:
+                    reward += 10
 
-        # if collided:  # Used for model 45
+            elif landed:
+                reward += 1000 * np.exp(
+                    -5
+                    * (
+                        np.abs(obs[4])
+                        + np.abs(obs[0]) * 2
+                        + np.abs(obs[1])
+                        + np.abs(obs[3])
+                    )
+                    / 5
+                )
+            else:
+                reward += -50
+
+        # Landing reward
+        # if collided:  # Used for model 53
         #     self.done = True
+        #     # reward += -100
         #     if landed:
         #         reward += 1000 * np.exp(
         #             -10
         #             * (
         #                 np.abs(obs[4])
-        #                 + np.abs(obs[0])
+        #                 + np.abs(obs[0]) * 2
         #                 + np.abs(obs[1])
         #                 + np.abs(obs[3])
         #             )
-        #             / 4
+        #             / 5
         #         )
         #     else:
         #         reward += -100
 
-        # if collided:  # Used for model 46, 47, 48 and 49 (only 49 has 10x for horizontal speed, others has 2x)
-        #     self.done = True
-        #     if landed:
-        #         reward += 1000 * np.exp(
-        #             -5
-        #             * (
-        #                 np.abs(obs[4])
-        #                 + np.abs(obs[0]) * 10
-        #                 + np.abs(obs[1]) * 2
-        #                 + np.abs(obs[3])
-        #             )
-        #             / 14
-        #         )
-        #     else:
-        #         reward += -100
+        # reward += np.exp(
+        #     -5 * (np.abs(obs[4]) + np.abs(obs[5]))
+        # )  # Attraction to landing point (used for model 22), used as first step for training without penalty
 
-        # if collided:  # Used for model 50
-        #     self.done = True
-        #     if landed:
-        #         reward += 1000 * np.exp(
-        #             -5
-        #             * (
-        #                 np.abs(obs[4])
-        #                 + np.abs(obs[0]) * 10
-        #                 + np.abs(obs[1]) * 2
-        #                 + np.abs(obs[3])
-        #             )
-        #             / 14
-        #         ) - (self.current_time_step * 2)
-        #     else:
-        #         reward += -100
-
-        if collided:  # Used for model 51
+        # Stops episode, when drone is out of range or overlaps
+        if np.abs(obs[3]) == 1 or np.abs(obs[6]) == 1 or np.abs(obs[7]) == 1:
             self.done = True
-            if landed:
-                reward += (
-                    1000
-                    * np.exp(
-                        -5
-                        * (
-                            np.abs(obs[4])
-                            + np.abs(obs[0]) * 2
-                            + np.abs(obs[1])
-                            + np.abs(obs[3])
-                        )
-                        / 14
-                    )
-                    - self.current_time_step
-                )
-            else:
-                reward += -100
+            reward += -100
+            # reward = -10
+
+        reward -= 0.25  # Penalty for each time step used for models 35 + 36 and 46, 47, 48 and 49
 
         # Saving drone's position for drawing
         if self.first_step is True:
@@ -207,18 +183,6 @@ class TurboLander2DEnvV1(gym.Env):
                 self.render_mode == "human" or self.render_mode == "rgb_array"
             ) and self.render_path is True:
                 self.add_postion_to_flight_path(self.drone.position_px)
-
-        # reward += np.exp(
-        #     -5 * (np.abs(obs[4]) + np.abs(obs[5]))
-        # )  # Attraction to landing point (used for model 22)
-
-        # Stops episode, when drone is out of range or overlaps
-        if np.abs(obs[3]) == 1 or np.abs(obs[6]) == 1 or np.abs(obs[7]) == 1:
-            self.done = True
-            reward += -100
-            # reward = -10
-
-        # reward -= 0.25  # Penalty for each time step used for models 35 + 36 and 46, 47, 48 and 49
 
         # Stops episode, when time is up
         self.current_time_step += 1

@@ -66,6 +66,70 @@
 #     else:
 #         reward += -100
 
+# if collided:  # Used for model 41 + 42 + 44
+#     self.done = True
+#     if landed:
+#         reward += 1000 * np.exp(
+#             -5
+#             * (
+#                 np.abs(obs[4])
+#                 + np.abs(obs[0])
+#                 + np.abs(obs[1])
+#                 + np.abs(obs[3])
+#             )
+#             / 4
+#         )
+#     else:
+#         reward += -100
+
+# if collided:  # Used for model 45
+#     self.done = True
+#     if landed:
+#         reward += 1000 * np.exp(
+#             -10
+#             * (
+#                 np.abs(obs[4])
+#                 + np.abs(obs[0])
+#                 + np.abs(obs[1])
+#                 + np.abs(obs[3])
+#             )
+#             / 4
+#         )
+#     else:
+#         reward += -100
+
+# if collided:  # Used for model 46, 47, 48 and 49 (only 49 has 10x for horizontal speed, others has 2x)
+#     self.done = True
+#     if landed:
+#         reward += 1000 * np.exp(
+#             -5
+#             * (
+#                 np.abs(obs[4])
+#                 + np.abs(obs[0]) * 2
+#                 + np.abs(obs[1]) * 2
+#                 + np.abs(obs[3])
+#             )
+#             / 6
+#         )
+#     else:
+#         reward += -100
+
+# if collided:  # Used for model 50
+#     self.done = True
+#     if landed:
+#         reward += 1000 * np.exp(
+#             -5
+#             * (
+#                 np.abs(obs[4])
+#                 + np.abs(obs[0]) * 10
+#                 + np.abs(obs[1]) * 2
+#                 + np.abs(obs[3])
+#             )
+#             / 14
+#         ) - (self.current_time_step * 2)
+#     else:
+#         reward += -100
+
 
 # Calulating reward function
 # reward += (
