@@ -141,26 +141,26 @@ class TurboLander2DEnvV1(gym.Env):
         #         reward += -50
 
         # Landing reward
-        if collided:  # Used for model 53 + 54
-            self.done = True
-            # reward += -100
-            if landed:
-                reward += 1000 * np.exp(
-                    -10
-                    * (
-                        np.abs(obs[4])
-                        + np.abs(obs[0]) * 2
-                        + np.abs(obs[1])
-                        + np.abs(obs[3])
-                    )
-                    / 5
-                )
-            else:
-                reward += -100
+        # if collided:  # Used for model 54
+        #     self.done = True
+        #     # reward += -100
+        #     if landed:
+        #         reward += 1000 * np.exp(
+        #             -10
+        #             * (
+        #                 np.abs(obs[4])
+        #                 + np.abs(obs[0]) * 2
+        #                 + np.abs(obs[1])
+        #                 + np.abs(obs[3])
+        #             )
+        #             / 5
+        #         )
+        #     else:
+        #         reward += -100
 
-        # reward += np.exp(
-        #     -5 * (np.abs(obs[4]) + np.abs(obs[5]))
-        # )  # Attraction to landing point (used for model 22), used as first step for training without penalty
+        reward += np.exp(
+            -5 * (np.abs(obs[4]) + np.abs(obs[5]))
+        )  # Attraction to landing point (used for model 22 + 53), used as first step for training without penalty
 
         # Stops episode, when drone is out of range or overlaps
         if np.abs(obs[3]) == 1 or np.abs(obs[6]) == 1 or np.abs(obs[7]) == 1:
