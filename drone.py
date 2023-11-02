@@ -60,7 +60,7 @@ class Drone:
 
         # Changed the upright flight attitude to be pi radians instead of 0 so that the observation is 0 when the drone is upright
         # means that there isnt a discontinous change in observation when the drone rolls left causing failure as it went to -1 and caused end of episode
-
+        # now it goes from -pi to pi and the observation is 0 when the drone is upright
         gravitational_acceleration = math.Vector2(0, 9.81)
 
         air_relative_velocity = self.velocity - wind_vector
