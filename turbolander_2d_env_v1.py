@@ -40,6 +40,7 @@ class TurboLander2DEnvV1(gym.Env):
         self.render_path = render_path
         self.last_observation = np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float32)
         self.last_action = np.array([0, 0], dtype=np.float32)
+        self.last_shaping = None
 
         # Generate wind vector
         self.wind_vector = Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
@@ -48,8 +49,10 @@ class TurboLander2DEnvV1(gym.Env):
         self.drone = Drone(Vector2(4, 4), Vector2(0, 0), 0, 0, 1, 0.5)
 
         self.max_speed = np.sqrt(
-            2 * 9.81 * (self.drone.thrust_multiplier * 2 / self.drone.mass) * 8
-        )
+            2 * (9.81 + (self.drone.thrust_multiplier * 2 / self.drone.mass)) * 8
+        )  # this was wrong before causing the velocity observation to be tiny, changed from * 9.81 to + 9.81. May break compatibility with old versions
+
+        self.max_speed
 
         self.walls = [Wall([0, 750, 800, 750], 0.6, True)]
 
@@ -110,55 +113,82 @@ class TurboLander2DEnvV1(gym.Env):
         obs = self.get_observation()
         collided, landed = self.drone.check_collision(self.walls)
 
-        if collided:  # new test reward for sac model 10
+        # Implemented for sac model 15
+        # Reward shaping like gymnasium lunar lander
+        shaping = (
+            -100 * np.sqrt(obs[4] * obs[4] + obs[5] * obs[5])
+            - 100 * np.sqrt(obs[0] * obs[0] + obs[1] * obs[1])
+            - 100 * abs(obs[3])
+        )
+        if self.last_shaping is not None:
+            reward = shaping - self.last_shaping
+        self.last_shaping = shaping
+
+        if collided:  # new test reward for sac model 10, 11 and 12
             self.done = True
             if (  # Criteria for safe landing
                 landed
-                and abs(self.drone.velocity[0]) < 0.2
-                and abs(self.drone.velocity[1]) < 0.5
+                and abs(self.drone.velocity[0]) < 0.2  # 1 for model 65
+                and abs(self.drone.velocity[1]) < 0.5  # 1 for model 65
                 and abs(self.drone.attitude) < 15 * (np.pi / 180)
             ):
                 if (  # Criteria for landing on target
                     abs(self.drone.position_m[0] - self.y_target_m)
                     <= self.target_radius_m
                 ):
-                    reward += 50 - (
-                        self.current_time_step * 0.1
-                    )  # Safe landing on target
-                else:
-                    reward += 0  # Safe landing off target
+                    reward = 100
             else:
-                reward += -50  # Crash
+                reward = -50  # Crash
 
-            # Landing reward
-            # if collided:  # Used for SAC model 9
-            #     self.done = True
-            #     # reward += -100
-            #     if landed:
-            #         reward += 50 * np.exp(
-            #             -10
-            #             * (
-            #                 np.abs(obs[4])
-            #                 + np.abs(obs[0]) * 2
-            #                 + np.abs(obs[1])
-            #                 + np.abs(obs[3])
-            #             )
-            #             / 5
-            #         )
-            #     else:
-            #         reward += -50
+        # if collided:  # new test reward for sac model 10, 11 and 12
+        #     self.done = True
+        #     if (  # Criteria for safe landing
+        #         landed
+        #         and abs(self.drone.velocity[0]) < 0.2
+        #         and abs(self.drone.velocity[1]) < 0.5
+        #         and abs(self.drone.attitude) < 15 * (np.pi / 180)
+        #     ):
+        #         if (  # Criteria for landing on target
+        #             abs(self.drone.position_m[0] - self.y_target_m)
+        #             <= self.target_radius_m
+        #         ):
+        #             reward += 50 - (
+        #                 self.current_time_step * 0.1
+        #             )  # Safe landing on target
+        #         else:
+        #             reward += 0  # Safe landing off target
+        #     else:
+        #         reward += -50  # Crash
+
+        # Landing reward
+        # if collided:  # Used for SAC model 9
+        #     self.done = True
+        #     # reward += -100
+        #     if landed:
+        #         reward += 50 * np.exp(
+        #             -10
+        #             * (
+        #                 np.abs(obs[4])
+        #                 + np.abs(obs[0]) * 2
+        #                 + np.abs(obs[1])
+        #                 + np.abs(obs[3])
+        #             )
+        #             / 5
+        #         )
+        #     else:
+        #         reward += -50
 
         # reward += 0.1 * np.exp(
         #     -5 * (np.abs(obs[4]) + np.abs(obs[5]))
-        # )  # Attraction to landing point (used for model 22 + 53), used as first step for training without penalty
+        # )  # Attraction to landing point (used for model 22 + 53), used as first step for training without penalty. Used for sac model 11
 
         # Stops episode, when drone is out of range or overlaps
         if np.abs(obs[3]) == 1 or np.abs(obs[6]) == 1 or np.abs(obs[7]) == 1:
             self.done = True
-            reward += -50
+            reward = -50
             # reward = -100
 
-        # reward -= 0.25  # Penalty for each time step used for models 35 + 36 and 46, 47, 48 and 49
+        reward -= 0.25  # Penalty for each time step used for models 35 + 36 and 46, 47, 48 and 49. Using for sac 18
 
         # Saving drone's position for drawing
         if self.first_step is True:
@@ -178,6 +208,7 @@ class TurboLander2DEnvV1(gym.Env):
         self.current_time_step += 1
         if self.current_time_step == self.max_time_steps:
             self.done = True
+            reward += -50
 
         self.last_observation = obs
         self.last_action = action
