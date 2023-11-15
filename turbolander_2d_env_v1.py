@@ -9,6 +9,7 @@ import pygame.freetype
 from pygame.math import Vector2
 from . import helpers
 from .drone import Drone
+from .wind import Wind
 from .wall import Wall
 from typing import Optional
 import pathlib
@@ -43,7 +44,9 @@ class TurboLander2DEnvV1(gym.Env):
         self.last_shaping = None
 
         # Generate wind vector
-        self.wind_vector = Vector2(random.uniform(-10, 10), random.uniform(-10, 10))
+        self.wind_vector = Vector2(0, 0)
+        # self.wind = Wind(self.screen_width, self.screen_height, 5, 0, 0.1)
+        self.wind = Wind(self.screen_width, self.screen_height, 5, 0, 0)
 
         # set up the drone object with default values
         self.drone = Drone(Vector2(4, 4), Vector2(0, 0), 0, 0, 1, 0.5)
@@ -107,9 +110,10 @@ class TurboLander2DEnvV1(gym.Env):
         )
 
     def step(self, action):
-        # if self.first_step is True:
-        reward = 0
+        self.wind_vector = self.wind.get_wind(1.0 / 60, self.drone.position_px)
         self.drone.step(action, 1.0 / 60, self.wind_vector)
+
+        reward = 0
         obs = self.get_observation()
         collided, landed = self.drone.check_collision(self.walls)
 
@@ -128,8 +132,8 @@ class TurboLander2DEnvV1(gym.Env):
             self.done = True
             if (  # Criteria for safe landing
                 landed
-                and abs(self.drone.velocity[0]) < 0.2  # 1 for model 65
-                and abs(self.drone.velocity[1]) < 0.5  # 1 for model 65
+                and abs(self.drone.velocity[0]) < 1  # 1 for model 65, 0.2 for sac 18
+                and abs(self.drone.velocity[1]) < 1  # 1 for model 65 0.5 for sac 18
                 and abs(self.drone.attitude) < 15 * (np.pi / 180)
             ):
                 if (  # Criteria for landing on target
@@ -140,69 +144,18 @@ class TurboLander2DEnvV1(gym.Env):
             else:
                 reward = -50  # Crash
 
-        # if collided:  # new test reward for sac model 10, 11 and 12
-        #     self.done = True
-        #     if (  # Criteria for safe landing
-        #         landed
-        #         and abs(self.drone.velocity[0]) < 0.2
-        #         and abs(self.drone.velocity[1]) < 0.5
-        #         and abs(self.drone.attitude) < 15 * (np.pi / 180)
-        #     ):
-        #         if (  # Criteria for landing on target
-        #             abs(self.drone.position_m[0] - self.y_target_m)
-        #             <= self.target_radius_m
-        #         ):
-        #             reward += 50 - (
-        #                 self.current_time_step * 0.1
-        #             )  # Safe landing on target
-        #         else:
-        #             reward += 0  # Safe landing off target
-        #     else:
-        #         reward += -50  # Crash
-
-        # Landing reward
-        # if collided:  # Used for SAC model 9
-        #     self.done = True
-        #     # reward += -100
-        #     if landed:
-        #         reward += 50 * np.exp(
-        #             -10
-        #             * (
-        #                 np.abs(obs[4])
-        #                 + np.abs(obs[0]) * 2
-        #                 + np.abs(obs[1])
-        #                 + np.abs(obs[3])
-        #             )
-        #             / 5
-        #         )
-        #     else:
-        #         reward += -50
-
-        # reward += 0.1 * np.exp(
-        #     -5 * (np.abs(obs[4]) + np.abs(obs[5]))
-        # )  # Attraction to landing point (used for model 22 + 53), used as first step for training without penalty. Used for sac model 11
-
         # Stops episode, when drone is out of range or overlaps
         if np.abs(obs[3]) == 1 or np.abs(obs[6]) == 1 or np.abs(obs[7]) == 1:
             self.done = True
             reward = -50
             # reward = -100
 
-        reward -= 0.25  # Penalty for each time step used for models 35 + 36 and 46, 47, 48 and 49. Using for sac 18
+        # reward -= 0.25  # Penalty for each time step used for models 35 + 36 and 46, 47, 48 and 49. Using for sac 18
 
         # Saving drone's position for drawing
-        if self.first_step is True:
-            if (
-                self.render_mode == "human" or self.render_mode == "rgb_array"
-            ) and self.render_path is True:
-                self.add_postion_to_flight_path(self.drone.position_px)
-            self.first_step = False
 
-        else:
-            if (
-                self.render_mode == "human" or self.render_mode == "rgb_array"
-            ) and self.render_path is True:
-                self.add_postion_to_flight_path(self.drone.position_px)
+        if self.render_mode == "human" or self.render_mode == "rgb_array":
+            self.add_postion_to_flight_path(self.drone.position_px)
 
         # Stops episode, when time is up
         self.current_time_step += 1
@@ -213,8 +166,6 @@ class TurboLander2DEnvV1(gym.Env):
         self.last_observation = obs
         self.last_action = action
 
-        if self.render_mode == "human":
-            self.render()
         return obs, reward, self.done, False, self.info
 
     def get_observation(self):
@@ -379,15 +330,16 @@ class TurboLander2DEnvV1(gym.Env):
             current_offset = current_offset + offset
 
         # Draw wind vector
-        helpers.draw_arrow(
-            self.screen,
-            Vector2(self.screen_width - 60, 60) - self.wind_vector.normalize() * 50,
-            Vector2(self.screen_width - 60, 60) + self.wind_vector.normalize() * 50,
-            (108, 171, 221),
-            self.wind_vector.magnitude(),
-            self.wind_vector.magnitude() * 2,
-            self.wind_vector.magnitude() * 2,
-        )
+        if self.wind_vector.magnitude() != 0:
+            helpers.draw_arrow(
+                self.screen,
+                Vector2(self.screen_width - 60, 60) - self.wind_vector.normalize() * 50,
+                Vector2(self.screen_width - 60, 60) + self.wind_vector.normalize() * 50,
+                (108, 171, 221),
+                self.wind_vector.magnitude(),
+                self.wind_vector.magnitude() * 2,
+                self.wind_vector.magnitude() * 2,
+            )
 
     def reset(
         self,
