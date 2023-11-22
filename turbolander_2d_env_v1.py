@@ -46,7 +46,8 @@ class TurboLander2DEnvV1(gym.Env):
         # Generate wind vector
         self.wind_vector = Vector2(0, 0)
         # self.wind = Wind(self.screen_width, self.screen_height, 5, 0, 0.1)
-        self.wind = Wind(self.screen_width, self.screen_height, 5, 0, 0)
+        # self.wind = Wind(self.screen_width, self.screen_height, 5, 0, 0)
+        self.wind = Wind(1, 1, 5, 0, 0.05)
 
         # set up the drone object with default values
         self.drone = Drone(Vector2(4, 4), Vector2(0, 0), 0, 0, 1, 0.5)
@@ -91,8 +92,10 @@ class TurboLander2DEnvV1(gym.Env):
             low=min_action, high=max_action, dtype=np.float32
         )
 
-        min_observation = np.array([-1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32)
-        max_observation = np.array([1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32)
+        min_observation = np.array(
+            [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1], dtype=np.float32
+        )
+        max_observation = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.float32)
         self.observation_space = spaces.Box(
             low=min_observation, high=max_observation, dtype=np.float32
         )
@@ -110,7 +113,9 @@ class TurboLander2DEnvV1(gym.Env):
         )
 
     def step(self, action):
-        self.wind_vector = self.wind.get_wind(1.0 / 60, self.drone.position_px)
+        self.wind_vector = self.wind.get_wind(
+            1.0 / 60, Vector2(0, 0)
+        )  # using 1x1 wind grid to speed up
         self.drone.step(action, 1.0 / 60, self.wind_vector)
 
         reward = 0
@@ -188,6 +193,10 @@ class TurboLander2DEnvV1(gym.Env):
         target_dist_y = np.clip(position_y - target_y_norm, -1, 1)
         target_dist_z = np.clip(position_z - target_z_norm, -1, 1)
 
+        self.wind_vector = self.wind.get_wind(1.0 / 60, Vector2(0, 0))
+        wind_velocity_y = np.clip(self.wind_vector[0] / self.max_speed, -1, 1)
+        wind_velocity_z = np.clip(self.wind_vector[1] / self.max_speed, -1, 1)
+
         return np.array(
             [
                 velocity_y,
@@ -198,6 +207,8 @@ class TurboLander2DEnvV1(gym.Env):
                 target_dist_z,
                 position_y,
                 position_z,
+                wind_velocity_y,
+                wind_velocity_z,
             ],
             dtype=np.float32,
         )
