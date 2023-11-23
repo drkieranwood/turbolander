@@ -23,7 +23,6 @@ class TurboLander2DEnvV1(gym.Env):
         "video.frames_per_second": 60,
     }
     """
-    render_sim: (bool) if true, a graphic is generated
     render_path: (bool) if true, the drone's path is drawn
     n_steps: (int) number of time steps
     """
@@ -60,9 +59,6 @@ class TurboLander2DEnvV1(gym.Env):
 
         self.walls = [Wall([0, 750, 800, 750], 0.6, True)]
 
-        # if self.render_sim is True:
-        #     self.init_pygame()
-        #     self.flight_path = []
         if self.render_mode == "human" or self.render_mode == "rgb_array":
             self.init_pygame()
             self.flight_path = []

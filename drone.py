@@ -65,13 +65,16 @@ class Drone:
 
         air_relative_velocity = self.velocity - wind_vector
 
-        drag = (
-            0.5
-            * self.drag_coefficient
-            * self.reference_area
-            * self.air_density
-            * (air_relative_velocity.magnitude() ** 2)
-        ) * -air_relative_velocity.normalize()
+        if air_relative_velocity.magnitude() != 0:
+            drag = (
+                0.5
+                * self.drag_coefficient
+                * self.reference_area
+                * self.air_density
+                * (air_relative_velocity.magnitude() ** 2)
+            ) * -air_relative_velocity.normalize()
+        else:
+            drag = math.Vector2(0, 0)
 
         # acceleration = (
         #     thrust_vector.elementwise() / self.mass + gravitational_acceleration
