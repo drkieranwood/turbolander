@@ -42,7 +42,8 @@ class Wind:
         # 2D array to store v,w velocities for every pixel
         self.wind_field = np.zeros((width, height, 2))
 
-        self.steady_state_max = 20
+        # Beaufort scale level 7
+        self.steady_state_max = 15
 
         # Inspried by https://arc.aiaa.org/doi/full/10.2514/1.C036772
         # there is a list of parameters for the discrete gusts
@@ -58,7 +59,7 @@ class Wind:
         #   --t0 (time the gust began in s)
         #
         self.gust_params = []
-        self.wg0_max = 50  # 50m/s max possible gust speed
+        self.wg0_max = 10  # 10m/s max possible gust speed
         self.gust_rate_max = 10  # max of x10 new gusts per second (ish)
         self.last_gust_t0 = 0
 

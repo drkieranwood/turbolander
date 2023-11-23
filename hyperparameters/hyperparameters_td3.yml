@@ -1,25 +1,25 @@
-# turbolander-2d-custom-v1:
-#   n_timesteps: !!float 3e5
-#   policy: 'MlpPolicy'
-#   gamma: 0.98
-#   buffer_size: 200000
-#   learning_starts: 10000
-#   noise_type: 'normal'
-#   noise_std: 0.1
-#   gradient_steps: -1
-#   train_freq: [1, "episode"]
-#   learning_rate: !!float 1e-3
-#   policy_kwargs: "dict(net_arch=[400, 300])"
-
 turbolander-2d-custom-v1:
   n_timesteps: !!float 3e5
   policy: 'MlpPolicy'
   gamma: 0.98
   buffer_size: 200000
   learning_starts: 10000
-  noise_type: 'ornstein-uhlenbeck'
-  noise_std: 0.5
+  noise_type: 'normal'
+  noise_std: 0.1
   gradient_steps: -1
   train_freq: [1, "episode"]
   learning_rate: !!float 1e-3
   policy_kwargs: "dict(net_arch=[400, 300])"
+
+# turbolander-2d-custom-v1:
+#   n_timesteps: !!float 3e5
+#   policy: 'MlpPolicy'
+#   gamma: 0.98
+#   buffer_size: 200000
+#   learning_starts: 10000
+#   noise_type: 'ornstein-uhlenbeck'
+#   noise_std: 0.5
+#   gradient_steps: -1
+#   train_freq: [1, "episode"]
+#   learning_rate: !!float 1e-3
+#   policy_kwargs: "dict(net_arch=[400, 300])"

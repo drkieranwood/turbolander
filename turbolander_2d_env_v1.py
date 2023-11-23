@@ -45,8 +45,7 @@ class TurboLander2DEnvV1(gym.Env):
         # Generate wind vector
         self.wind_vector = Vector2(0, 0)
         # self.wind = Wind(self.screen_width, self.screen_height, 5, 0, 0.1)
-        # self.wind = Wind(self.screen_width, self.screen_height, 5, 0, 0)
-        self.wind = Wind(1, 1, 5, 0, 0.05)
+        self.wind = Wind(1, 1, 5, 0, 0.1)
 
         # set up the drone object with default values
         self.drone = Drone(Vector2(4, 4), Vector2(0, 0), 0, 0, 1, 0.5)
@@ -54,8 +53,7 @@ class TurboLander2DEnvV1(gym.Env):
         self.max_speed = np.sqrt(
             2 * (9.81 + (self.drone.thrust_multiplier * 2 / self.drone.mass)) * 8
         )  # this was wrong before causing the velocity observation to be tiny, changed from * 9.81 to + 9.81. May break compatibility with old versions
-
-        self.max_speed
+        self.max_wind_speed = 100
 
         self.walls = [Wall([0, 750, 800, 750], 0.6, True)]
 
@@ -190,8 +188,8 @@ class TurboLander2DEnvV1(gym.Env):
         target_dist_z = np.clip(position_z - target_z_norm, -1, 1)
 
         self.wind_vector = self.wind.get_wind(1.0 / 60, Vector2(0, 0))
-        wind_velocity_y = np.clip(self.wind_vector[0] / self.max_speed, -1, 1)
-        wind_velocity_z = np.clip(self.wind_vector[1] / self.max_speed, -1, 1)
+        wind_velocity_y = np.clip(self.wind_vector[0] / self.max_wind_speed, -1, 1)
+        wind_velocity_z = np.clip(self.wind_vector[1] / self.max_wind_speed, -1, 1)
 
         return np.array(
             [
